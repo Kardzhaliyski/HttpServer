@@ -2,7 +2,10 @@ package org.example;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.example.utils.CliOptions;
+
+import java.util.Set;
 
 public class ServerBuilder {
     public static final int DEFAULT_PORT = 80;
@@ -13,35 +16,37 @@ public class ServerBuilder {
     private int threadCount = DEFAULT_THREAD_COUNT;
     private boolean showDirectoryContent = false;
     private String root = DEFAULT_DIRECTORY;
+    private Set<Option> options = null;
 
     public ServerBuilder() {
     }
 
     public ServerBuilder(CommandLine cli) {
         String[] args = cli.getArgs();
-        if(args.length > 1) {
+        if (args.length > 1) {
             System.out.println("Invalid input! Must not contain more then 1 path");
             Main.printUsage();
             System.exit(1);
         }
 
-        if(args.length == 1) {
+        if (args.length == 1) {
             root = args[0];
         }
 
-        for (Option option : cli.getOptions()) {
+        options = Set.of(cli.getOptions());
+        for (Option option : options) {
             if (option.equals(CliOptions.PRINT_DIRECTORY)) {
                 showDirectoryContent = true;
-            } else if(option == CliOptions.PORT) {
+            } else if (option == CliOptions.PORT) {
                 port = Integer.parseInt(option.getValue());
-            } else if(option == CliOptions.THREADS) {
+            } else if (option == CliOptions.THREADS) {
                 threadCount = Integer.parseInt(option.getValue());
             }
         }
     }
 
     public Server build() {
-        return new Server(root, port, threadCount, showDirectoryContent);
+        return new Server(root, port, threadCount, showDirectoryContent, options);
     }
 
     public ServerBuilder setPort(int port) {
