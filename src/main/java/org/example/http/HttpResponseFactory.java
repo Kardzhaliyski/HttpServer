@@ -30,4 +30,11 @@ public class HttpResponseFactory {
         r.addHeader("Content-Type", "text/html");
         return r;
     }
+
+    public static HttpResponse redirect(String protocol, String s) {
+        HttpResponse r = new HttpResponse(protocol, StatusCode.MOVED_PERMANENTLY);
+        r.addHeader("Location", s);
+        r.addHeader("Content-Type", "text/html");
+        return r;
+    }
 }

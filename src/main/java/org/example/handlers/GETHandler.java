@@ -23,6 +23,10 @@ public class GETHandler {
         }
 
         if (dest.isDirectory()) {
+            if(!request.path.isBlank() && !request.path.endsWith("/")) {
+                return HttpResponseFactory.redirect(request.protocol,   request.path + "/");
+            }
+
             File[] files = dest.listFiles();
             for (File file : files) {
                 try {
@@ -35,8 +39,8 @@ public class GETHandler {
 
             if (server.showDirectoryContent) {
                 String content = Arrays.stream(files)
-                        .map(f -> String.format("<a href=%s/%s>%s</a>",
-                               root.equals(path) ? "." : path.getFileName() , f.getName(), f.getName()))
+                        .map(f -> String.format("<a href=\"%s/\">%s</a>",
+                                f.getName(), f.getName()))
                         .collect(Collectors.joining("<br/>"));
                 return HttpResponseFactory.stringResponse(request.protocol, content);
             } else {

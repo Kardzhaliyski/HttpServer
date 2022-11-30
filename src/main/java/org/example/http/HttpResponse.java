@@ -23,6 +23,7 @@ public class HttpResponse {
         this.protocol = protocol;
         this.statusCode = statusCode;
         this.headers = new HashMap<>();
+        this.body = new byte[0];
     }
 
     public void addHeader(String key, String value) {

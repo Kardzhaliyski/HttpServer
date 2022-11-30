@@ -10,11 +10,11 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.time.Instant;
 
-public class HttpCommunication implements Runnable {
+public class HttpTask implements Runnable {
     Socket socket;
     Server server;
 
-    public HttpCommunication(Server server, Socket socket) {
+    public HttpTask(Server server, Socket socket) {
         this.server = server;
         this.socket = socket;
     }

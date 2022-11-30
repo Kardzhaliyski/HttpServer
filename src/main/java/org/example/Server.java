@@ -1,6 +1,6 @@
 package org.example;
 
-import org.example.http.HttpCommunication;
+import org.example.http.HttpTask;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -27,7 +27,7 @@ public class Server {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {
                 Socket socket = serverSocket.accept();
-                executorService.submit(new HttpCommunication(this, socket));
+                executorService.submit(new HttpTask(this, socket));
             }
         }
     }
