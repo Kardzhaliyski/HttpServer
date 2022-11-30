@@ -33,8 +33,8 @@ public class HttpRequest {
                     continue;
                 }
 
-                String key = line.substring(0, i);
-                String value = line.substring(i + 1);
+                String key = line.substring(0, i).trim();
+                String value = line.substring(i + 1).trim();
                 headers.put(key, value);
                 break;
             }

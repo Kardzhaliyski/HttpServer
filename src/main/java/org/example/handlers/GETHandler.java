@@ -7,15 +7,17 @@ import org.example.http.HttpResponseFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class GETHandler {
-    public static HttpResponse handle(Server server, HttpRequest request) {
+    public static HttpResponse handle(Server server, HttpRequest request) throws IOException {
         Path root = server.root;
         Path path = root.resolve(request.path);
         File dest = path.toFile();
+
         if (!dest.exists()) {
             return HttpResponseFactory.notFound(request.protocol);
         }

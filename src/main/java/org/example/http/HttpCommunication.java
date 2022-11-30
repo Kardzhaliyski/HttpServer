@@ -2,13 +2,15 @@ package org.example.http;
 
 import org.example.handlers.GETHandler;
 import org.example.Server;
+import org.example.utils.StatusCode;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.time.Instant;
 
-public class HttpCommunication implements Runnable{
+public class HttpCommunication implements Runnable {
     Socket socket;
     Server server;
 
@@ -22,12 +24,22 @@ public class HttpCommunication implements Runnable{
         try {
             InputStream inputStream = socket.getInputStream();
             HttpRequest request = new HttpRequest(inputStream);
+            log(request);
+
             HttpResponse response = GETHandler.handle(server, request);
+            String ae = request.headers.get("Accept-Encoding");
+            if(ae.contains("gzip")){
+                response.shouldCompress = true;
+            }
+
+            if (response.statusCode == StatusCode.NOT_FOUND) {
+                logError(request.method, request.path, response.statusCode);
+            }
 
             OutputStream outputStream = socket.getOutputStream();
             response.send(outputStream);
         } catch (IOException e) {
-            throw new RuntimeException(e);//todo
+            throw new RuntimeException(e);
         } finally {
             try {
                 socket.close();
@@ -35,6 +47,23 @@ public class HttpCommunication implements Runnable{
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private void logError(String method, String path, StatusCode errorCode) {
+        System.err.printf("[%s] \"%s /%s\" Error (%s): \"%s\"%n",
+                Instant.now().toString(),
+                method,
+                path,
+                errorCode.getCode(),
+                errorCode.getMessage());
+    }
+
+    private void log(HttpRequest request) {
+        System.out.printf("[%s] \"%s /%s\" \"%s\"%n",
+                Instant.now().toString(),
+                request.method,
+                request.path,
+                request.headers.get("User-Agent"));
     }
 
 }
