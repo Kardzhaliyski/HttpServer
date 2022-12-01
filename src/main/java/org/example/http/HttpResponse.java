@@ -60,49 +60,14 @@ public class HttpResponse {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append(protocol)
-                .append(" ")
-                .append(statusCode.getCode())
-                .append(" ")
-                .append(statusCode.getMessage())
-                .append(System.lineSeparator());
-
+        appendStatusLine(sb);
         addHeaders();
-        for (Map.Entry<String, String> kvp : headers.entrySet()) {
-            sb.append(kvp.getKey())
-                    .append(": ")
-                    .append(kvp.getValue())
-                    .append(System.lineSeparator());
-        }
+        appendHeaders(sb);
         sb.append(System.lineSeparator());
 
         OutputStream out = new BufferedOutputStream(outputStream);
-        out.write(sb.toString().getBytes());
-        out.flush();
-
-        if (bodyFile != null) {
-            BufferedInputStream in = new BufferedInputStream(new FileInputStream(bodyFile));
-            byte[] buff = new byte[4096];
-            int n;
-            while ((n = in.read(buff)) != -1) {
-                out.write(buff, 0, n);
-                out.flush();
-            }
-
-        } else {
-            out.write(body);
-        }
-
-        out.flush();
-    }
-
-    private String getContentType() {
-        try {
-            return Files.probeContentType(bodyFile.toPath());
-        } catch (IOException e) {
-            System.out.println("Error while getting Content-Type of: " + bodyFile.toPath());
-            return "";
-        }
+        sentInfo(sb, out);
+        sendBody(out);
     }
 
     private void addHeaders() {
@@ -120,6 +85,53 @@ public class HttpResponse {
 
         if (compressed) {
             headers.put("Content-Encoding", "gzip");
+        }
+    }
+
+    private void sendBody(OutputStream out) throws IOException {
+        if (bodyFile != null) {
+            BufferedInputStream in = new BufferedInputStream(new FileInputStream(bodyFile));
+            byte[] buff = new byte[4096];
+            int n;
+            while ((n = in.read(buff)) != -1) {
+                out.write(buff, 0, n);
+                out.flush();
+            }
+        } else {
+            out.write(body);
+        }
+        out.flush();
+    }
+
+    private static void sentInfo(StringBuilder sb, OutputStream out) throws IOException {
+        out.write(sb.toString().getBytes());
+        out.flush();
+    }
+
+    private void appendHeaders(StringBuilder sb) {
+        for (Map.Entry<String, String> kvp : headers.entrySet()) {
+            sb.append(kvp.getKey())
+                    .append(": ")
+                    .append(kvp.getValue())
+                    .append(System.lineSeparator());
+        }
+    }
+
+    private void appendStatusLine(StringBuilder sb) {
+        sb.append(protocol)
+                .append(" ")
+                .append(statusCode.getCode())
+                .append(" ")
+                .append(statusCode.getMessage())
+                .append(System.lineSeparator());
+    }
+
+    private String getContentType() {
+        try {
+            return Files.probeContentType(bodyFile.toPath());
+        } catch (IOException e) {
+            System.out.println("Error while getting Content-Type of: " + bodyFile.toPath());
+            return "";
         }
     }
 }

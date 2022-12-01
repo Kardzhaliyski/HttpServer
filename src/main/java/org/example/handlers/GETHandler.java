@@ -23,29 +23,7 @@ public class GETHandler {
         }
 
         if (dest.isDirectory()) {
-            if(!request.path.isBlank() && !request.path.endsWith("/")) {
-                return HttpResponseFactory.redirect(request.protocol,   "/" + request.path + "/");
-            }
-
-            File[] files = dest.listFiles();
-            for (File file : files) {
-                try {
-                    if (file.getName().equals("index.html")) {
-                        return HttpResponseFactory.file(request.protocol, file);
-                    }
-                } catch (FileNotFoundException ignored) {
-                }
-            }
-
-            if (server.showDirectoryContent) {
-                String content = Arrays.stream(files)
-                        .map(f -> String.format("<a href=\"%s/\">%s</a>",
-                                f.getName(), f.getName()))
-                        .collect(Collectors.joining("<br/>"));
-                return HttpResponseFactory.stringResponse(request.protocol, content);
-            } else {
-                return HttpResponseFactory.notFound(request.protocol);
-            }
+            return handleDirectory(server, request, dest);
         }
 
         try {
@@ -54,5 +32,28 @@ public class GETHandler {
         }
 
         return null;
+    }
+
+    private static HttpResponse handleDirectory(Server server, HttpRequest request, File dest) throws IOException {
+        if (!request.path.isBlank() && !request.path.endsWith("/")) {
+            return HttpResponseFactory.redirect(request.protocol, "/" + request.path + "/");
+        }
+
+        File[] files = dest.listFiles();
+        for (File file : files) {
+            if (file.getName().equals("index.html")) {
+                return HttpResponseFactory.file(request.protocol, file);
+            }
+        }
+
+        if (server.showDirectoryContent) {
+            String content = Arrays.stream(files)
+                    .map(f -> String.format("<a href=\"%s/\">%s</a>",
+                            f.getName(), f.getName()))
+                    .collect(Collectors.joining("<br/>"));
+            return HttpResponseFactory.stringResponse(request.protocol, content);
+        } else {
+            return HttpResponseFactory.notFound(request.protocol);
+        }
     }
 }
