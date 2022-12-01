@@ -25,10 +25,7 @@ public class Main {
         ServerBuilder builder = new ServerBuilder(cli);
         Server server = builder.build();
 
-
         server.start();
-
-
     }
 
     public static void printUsage() {

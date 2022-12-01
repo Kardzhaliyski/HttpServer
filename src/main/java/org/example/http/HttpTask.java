@@ -30,7 +30,7 @@ public class HttpTask implements Runnable {
             if (request.method.equals("GET")) {
                 response = GETHandler.handle(server, request);
                 String ae = request.headers.get("Accept-Encoding");
-                if (ae.contains("gzip")) {
+                if (ae != null && ae.contains("gzip")) {
                     response.serverAcceptGzip = true;
                 }
 

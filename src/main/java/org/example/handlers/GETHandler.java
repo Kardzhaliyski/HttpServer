@@ -24,7 +24,7 @@ public class GETHandler {
 
         if (dest.isDirectory()) {
             if(!request.path.isBlank() && !request.path.endsWith("/")) {
-                return HttpResponseFactory.redirect(request.protocol,   request.path + "/");
+                return HttpResponseFactory.redirect(request.protocol,   "/" + request.path + "/");
             }
 
             File[] files = dest.listFiles();

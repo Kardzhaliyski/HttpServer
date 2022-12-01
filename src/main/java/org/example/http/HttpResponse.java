@@ -2,6 +2,7 @@ package org.example.http;
 
 import org.example.Server;
 import org.example.utils.CliOptions;
+import org.example.utils.Gzip;
 import org.example.utils.StatusCode;
 
 import java.io.*;
@@ -49,9 +50,12 @@ public class HttpResponse {
 
     public void send(OutputStream outputStream) throws IOException {
         if (bodyFile != null) {
-            addHeaders();
+            String contentType = Files.probeContentType(bodyFile.toPath());
+            headers.put("Content-Type", contentType);
             if (serverAcceptGzip) {
-                bodyFile = getCompressedVersion(bodyFile);
+                File compressedFile = Gzip.getCompressedVersion(bodyFile, contentType);
+                compressed = compressedFile != bodyFile;
+                bodyFile =  compressedFile;
             }
         }
 
@@ -63,13 +67,7 @@ public class HttpResponse {
                 .append(statusCode.getMessage())
                 .append(System.lineSeparator());
 
-        headers.put("Date", LocalDateTime.now().toString());
-
-        if (bodyFile != null) {
-            long bodyLength = bodyFile.length();
-            headers.put("Content-Length", String.valueOf(bodyLength));
-        }
-
+        addHeaders();
         for (Map.Entry<String, String> kvp : headers.entrySet()) {
             sb.append(kvp.getKey())
                     .append(": ")
@@ -96,64 +94,23 @@ public class HttpResponse {
         out.flush();
     }
 
-    private File getCompressedVersion(File bodyFile) {
-        Server server = Server.getInstance();
-        boolean rtCompression = server.options.contains(CliOptions.REAL_TIME_COMPRESSION);
-        boolean cachedCompression = server.options.contains(CliOptions.CACHED_COMPRESSION);
-        if (!(rtCompression || cachedCompression)) {
-            return bodyFile;
-        }
-
-        String contentType = headers.get("Content-Type");
-        if (!(contentType.startsWith("text") ||
-                contentType.contains("json") ||
-                contentType.contains("svg") ||
-                contentType.contains("xml"))) {
-            return bodyFile;
-        }
-
-        String fName = bodyFile.getName();
-        Path cPath = bodyFile.toPath().getParent().resolve(fName + ".gz");
-        File cFile = cPath.toFile();
-        if (cFile.exists()) {
-            if (cFile.lastModified() > bodyFile.lastModified()) {
-                return cFile;
-            }
-        }
-
-        if (!rtCompression) {
-            return bodyFile;
-        }
-
-        try (GZIPOutputStream out = new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(cFile)));
-             InputStream in = new FileInputStream(bodyFile)) {
-            byte[] buff = new byte[4096];
-            int n;
-            while ((n = in.read(buff)) != -1) {
-                out.write(buff, 0, n);
-            }
-
-            out.finish();
-            out.flush();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return cFile;
-    }
-
     private void addHeaders() throws IOException {
-        Instant lastMod = Instant.ofEpochMilli(bodyFile.lastModified());
-        headers.put("Last-Modified", String.valueOf(lastMod));
+        headers.put("Date", LocalDateTime.now().toString());
 
-        String contentType = Files.probeContentType(bodyFile.toPath());
-        headers.put("Content-Type", contentType);
-        if (contentType.startsWith("image")) {
-            serverAcceptGzip = false;
-        }
+        Instant lastMod = bodyFile != null ?
+                Instant.ofEpochMilli(bodyFile.lastModified()) :
+                Instant.now();
+        headers.put("Last-Modified", lastMod.toString());
 
-        if (serverAcceptGzip) {
+        long bodyLength = bodyFile != null ?
+                bodyFile.length() :
+                body.length;
+        headers.put("Content-Length", String.valueOf(bodyLength));
+
+        if(compressed) {
             headers.put("Content-Encoding", "gzip");
         }
+
+
     }
 }

@@ -56,7 +56,6 @@ public class HttpRequest {
     }
 
     private StringBuilder rlSb;
-
     private String readLine(InputStreamReader in) {
         if (rlSb == null) {
             rlSb = new StringBuilder();
