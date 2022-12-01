@@ -50,12 +50,12 @@ public class HttpResponse {
 
     public void send(OutputStream outputStream) throws IOException {
         if (bodyFile != null) {
-            String contentType = Files.probeContentType(bodyFile.toPath());
+            String contentType = getContentType();
             headers.put("Content-Type", contentType);
             if (serverAcceptGzip) {
                 File compressedFile = Gzip.getCompressedVersion(bodyFile, contentType);
                 compressed = compressedFile != bodyFile;
-                bodyFile =  compressedFile;
+                bodyFile = compressedFile;
             }
         }
 
@@ -82,9 +82,11 @@ public class HttpResponse {
 
         if (bodyFile != null) {
             BufferedInputStream in = new BufferedInputStream(new FileInputStream(bodyFile));
-            int b;
-            while ((b = in.read()) != -1) {
-                out.write(b);
+            byte[] buff = new byte[4096];
+            int n;
+            while ((n = in.read(buff)) != -1) {
+                out.write(buff, 0, n);
+                out.flush();
             }
 
         } else {
@@ -94,7 +96,16 @@ public class HttpResponse {
         out.flush();
     }
 
-    private void addHeaders() throws IOException {
+    private String getContentType() {
+        try {
+            return Files.probeContentType(bodyFile.toPath());
+        } catch (IOException e) {
+            System.out.println("Error while getting Content-Type of: " + bodyFile.toPath());
+            return "";
+        }
+    }
+
+    private void addHeaders() {
         headers.put("Date", LocalDateTime.now().toString());
 
         Instant lastMod = bodyFile != null ?
@@ -107,10 +118,8 @@ public class HttpResponse {
                 body.length;
         headers.put("Content-Length", String.valueOf(bodyLength));
 
-        if(compressed) {
+        if (compressed) {
             headers.put("Content-Encoding", "gzip");
         }
-
-
     }
 }

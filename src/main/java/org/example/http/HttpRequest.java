@@ -11,7 +11,7 @@ public class HttpRequest {
     public Map<String, String> headers;
     public byte[] body;
 
-    public HttpRequest(InputStream inputStream) throws IOException {
+    public HttpRequest(InputStream inputStream) {
         InputStreamReader in = new InputStreamReader(inputStream);
         String line = readLine(in);
         String[] info = line.split(" ");
