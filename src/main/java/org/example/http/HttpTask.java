@@ -26,15 +26,22 @@ public class HttpTask implements Runnable {
             HttpRequest request = new HttpRequest(inputStream);
             log(request);
 
-            HttpResponse response = GETHandler.handle(server, request);
-            String ae = request.headers.get("Accept-Encoding");
-            if(ae.contains("gzip")){
-                response.serverAcceptGzip = true;
-            }
+            HttpResponse response;
+            if (request.method.equals("GET")) {
+                response = GETHandler.handle(server, request);
+                String ae = request.headers.get("Accept-Encoding");
+                if (ae.contains("gzip")) {
+                    response.serverAcceptGzip = true;
+                }
 
-            if (response.statusCode == StatusCode.NOT_FOUND) {
+                if (response.statusCode == StatusCode.NOT_FOUND) {
+                    logError(request.method, request.path, response.statusCode);
+                }
+            } else {
+                response = HttpResponseFactory.methodNotAllowed(request.protocol);
                 logError(request.method, request.path, response.statusCode);
             }
+
 
             OutputStream outputStream = socket.getOutputStream();
             response.send(outputStream);

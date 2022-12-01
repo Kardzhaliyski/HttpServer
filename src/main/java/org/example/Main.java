@@ -25,11 +25,10 @@ public class Main {
         ServerBuilder builder = new ServerBuilder(cli);
         Server server = builder.build();
 
-        try {
-            server.start();
-        } catch (IOException e) {
-            throw new RuntimeException(e); //todo
-        }
+
+        server.start();
+
+
     }
 
     public static void printUsage() {

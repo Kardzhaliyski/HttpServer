@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
+import java.sql.SQLOutput;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,12 +30,21 @@ public class Server {
         instance = this;
     }
 
-    public void start() throws IOException {
+    public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {
-                Socket socket = serverSocket.accept();
-                executorService.submit(new HttpTask(this, socket));
+                try {
+                    Socket socket = serverSocket.accept();
+                    executorService.submit(new HttpTask(this, socket));
+                } catch (IOException e) {
+                    System.out.println("Error while accepting socket connection");
+                    e.printStackTrace();
+                }
             }
+        } catch (IOException e) {
+            System.out.println("Error while opening Server socket.");
+            e.printStackTrace();
+            System.exit(4);
         }
     }
 

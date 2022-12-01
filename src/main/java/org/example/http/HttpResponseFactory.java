@@ -3,18 +3,21 @@ package org.example.http;
 import org.example.utils.StatusCode;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 
 public class HttpResponseFactory {
     public static HttpResponse notFound(String protocol) {
         HttpResponse r = new HttpResponse(protocol, StatusCode.NOT_FOUND);
         File file = Path.of("src/main/resources/static/NotFound.html").toFile();
         r.addBody(file);
+        return r;
+    }
+
+    public static HttpResponse methodNotAllowed(String protocol) {
+        HttpResponse r = new HttpResponse(protocol, StatusCode.METHOD_NOT_ALLOWED);
+        r.addBody("Method not allowed");
+        r.addHeader("Content-Type", "text/html");
         return r;
     }
 
